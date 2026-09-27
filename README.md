@@ -1,6 +1,6 @@
 # Blacksmith: an implementation kit
 
-This installs a standard for AI skill folders, plus the skill that applies it: it shapes a new skill from an approved plan, or checks a skill you already have against the standard and fixes the mechanical gaps behind a safety snapshot. Takes about 20 to 30 minutes to install, then 20 to 40 minutes for a first live run on one real skill (author's estimate; two cold tests ran the mechanics in about 12 to 15 minutes of machine time, which is a floor, not your time). You end up with the standard and the skill installed where your AI finds them, one line in your standing instructions, and one of your real skills checked and fixed.
+This installs a standard for AI skill folders, plus the skill that applies it: it shapes a new skill from an approved plan, or checks a skill you already have against the standard and fixes the mechanical gaps behind a safety snapshot. Takes about 20 to 30 minutes to install, then 20 to 40 minutes for a first live run on one real skill (author's estimate; three cold tests ran the mechanics in about 12 to 15 minutes of machine time, which is a floor, not your time). You end up with the standard and the skill installed where your AI finds them, one line in your standing instructions, and one of your real skills checked and fixed.
 
 Already installed `skill-creation-kit`? This replaces it; its method is retired.
 Already installed `rome-kit`? This is the skill-structuring tool Rome's step 6 calls; the install wires it in.

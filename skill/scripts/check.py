@@ -13,7 +13,7 @@ a path (anything with a slash, or starting with . or ~) is used as-is. Ten check
 This is the automatic half of the standard's check; the other half is a cold read of the skill
 by a fresh agent or a second person, from the fixture's paths.
 """
-import argparse, json, os, re, shlex, shutil, sys, tempfile, time
+import argparse, contextlib, io, json, os, re, shlex, shutil, sys, tempfile, time
 from datetime import datetime
 from pathlib import Path
 
@@ -197,7 +197,7 @@ def run_checks(target, cfg, fixture=None):
     if bad:
         rep.add(4, "paths", "FAIL", f"{len(bad)} missing of {count} checked: " + " · ".join(f"{w} `{p}`" for w, p in bad), bad[0][0])
     else:
-        rep.add(4, "paths", "PASS", f"{count} path-shaped tokens resolve" + ("" if workspace_root else " (no workspace root set: only skill-relative and absolute paths checked)"))
+        rep.add(4, "paths", "PASS", f"{count} path-shaped tokens resolve; paths in plain text are not checked" + ("" if workspace_root else " (no workspace root set: only skill-relative and absolute paths checked)"))
     # 5 · close line (its own `N` inside `(usual: N)` matches 1, 2 or 3; everything else literal)
     if close_line is None:
         rep.add(5, "close line", "SKIP", "no feedback loop chosen: close_line is null in blacksmith.json")
@@ -483,8 +483,11 @@ def main():
     p.add_argument("--snapshot", metavar="NAME_OR_PATH", help="copy the skill folder to history/snapshots/ and print the restore command")
     p.add_argument("--restore", nargs=2, metavar=("NAME", "STAMP"), help="copy a snapshot back over the skill folder")
     a = p.parse_args()
-    if a.selftest: sys.exit(selftest())
-    cfg = load_config()
+    if a.selftest:
+        buf = io.StringIO()            # the guard tests print as they run; only the verdict is shown
+        with contextlib.redirect_stdout(buf):
+            rc = selftest()
+        print(buf.getvalue().strip().splitlines()[-1]); sys.exit(rc)
     if a.snapshot: sys.exit(do_snapshot(a.snapshot, cfg))
     if a.restore: sys.exit(do_restore(a.restore[0], a.restore[1], cfg))
     if not a.target: p.error("give a skill name or path, or --selftest, --snapshot, --restore")
