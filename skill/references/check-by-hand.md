@@ -10,7 +10,7 @@ Run these with a text search and your eyes when there is no shell, or when you w
 
 **4. paths.** Look at: every path written in backticks or as a link target in the skill's `.md` files that is absolute or starts with `./`, `~/`, references/, scripts/, templates/, assets/, history/ or the name of a top-level folder of the workspace. Paths in plain text are not checked. PASS: each one resolves from the file that names it, from the skill folder, or from the workspace root. FAIL: a path that resolves from none of them.
 
-**5. close line.** Look at: the last non-blank line of SKILL.md. PASS: the exact close line the setup uses, with its number filled in. FAIL: missing, reworded, or not the last line. Skip if the skill is called only from another skill.
+**5. close line.** Look at: the last non-blank line of SKILL.md. PASS: the exact close line the setup uses, with its number filled in. FAIL: missing, reworded, or not the last line. Skip if the skill is called only from another skill, or if `close_line` is null in Blacksmith's `scripts/blacksmith.json` (no feedback loop in this install).
 
 **6. placeholders.** Look at: a text search for `[NEEDS CLARIFICATION` outside backticks. PASS: no matches. FAIL: any match.
 

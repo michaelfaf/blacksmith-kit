@@ -17,6 +17,7 @@
 | An existing skills index | _pending_ |
 | An installed build protocol with a plan the user approves | _pending_ |
 | Do the user's skills sit in a git repo | _pending_ |
+| An earlier skill-building method already installed (path, wiring line) | _pending_ / none |
 
 ## Decisions (Phase 1)
 
@@ -44,7 +45,7 @@
 - [ ] DP-1 through DP-6 decided and recorded above
 
 ### Phase 2: Install
-- [ ] `skill/` copied to the DP-1 location as `blacksmith/`
+- [ ] `skill/` copied to the DP-1 location as `blacksmith/` (DP-1 B: link made and verified in the same step)
 - [ ] `scripts/blacksmith.json` edited for DP-1, DP-3 and DP-6
 - [ ] `templates/fixture.md` and `templates/plan-card.md` confirmed inside the installed `blacksmith` folder
 - [ ] Named edits to `SKILL.md` / `standard.md` applied for the relevant DP branches
@@ -52,6 +53,7 @@
 - [ ] `check.py --selftest` and the check on `blacksmith` both PASS (or the by-hand checklist walked, DP-5 B)
 - [ ] Standing-instructions file wired with the quoted line
 - [ ] Build protocol's build step edited (DP-2 A only)
+- [ ] Earlier skill-building method retired with a pointer line and its wiring re-pointed (only when the scan found one)
 - [ ] Every install path recorded below
 
 | Install paths | |

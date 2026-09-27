@@ -24,6 +24,7 @@ Once you have it, fill in this table (also copy it into `STATUS.md`):
 | An existing skills index | A README, table, or list of the user's skills, if one exists |
 | An installed build protocol | Something like Rome, or a homemade process, that hands over an approved plan the user signed off on |
 | Git | Do the user's skills sit inside a git repo? |
+| An earlier skill-building method | Is a skill or a rules-file line from `skill-creation-kit`, or any other "how to build a skill" instruction, already installed? Note its path and its wiring line |
 
 No shell and no file access at all (chat-only)? Skip straight to asking the user each row in plain language, and keep this table as a note you paste back into future sessions.
 
@@ -134,7 +135,22 @@ Prompt:   "bring my weekly-review skill up to standard"
 
 ## Phase 2: install
 
-1. Copy `skill/` to the DP-1 location, renamed `blacksmith/`.
+1. Copy `skill/` to the DP-1 location, renamed `blacksmith/`. Under DP-1 option B that location is the user's skills folder inside the workspace, and the link into the platform's skills directory is made now, before any later step looks the skill up by name. Ask first; a link is always its own ask.
+
+   macOS and Linux:
+   ```
+   ls -l "<skills home>/blacksmith"                        # expect "No such file", or a link you mean to replace
+   ln -sfn "<workspace skills folder>/blacksmith" "<skills home>/blacksmith"
+   ls -lL "<skills home>/blacksmith"                       # follows the link; must list SKILL.md
+   ```
+
+   Windows (Command Prompt, as the user who owns both folders; not yet run on a Windows machine by the author, so read the output before moving on):
+   ```
+   dir "<skills home>\blacksmith"
+   mklink /J "<skills home>\blacksmith" "<workspace skills folder>\blacksmith"
+   dir "<skills home>\blacksmith"
+   ```
+   The first `dir` should say the folder is not found. If a junction is already there, remove it with `rmdir "<skills home>\blacksmith"` (that removes the junction and leaves the target alone), then run `mklink`. The last `dir` must list `SKILL.md`.
 
 2. Edit `scripts/blacksmith.json`. Shipped default:
    ```json
@@ -186,22 +202,9 @@ Prompt:   "bring my weekly-review skill up to standard"
 
 8. Under DP-2 option A only: add one line to the build protocol's own build step, naming `blacksmith` as the tool it hands a locked plan to for skill-shaped work.
 
-9. Record every path written or edited so far: the install path, `blacksmith.json`'s final contents, the templates copied, the standing-instructions edit, the build-protocol edit if any: in `STATUS.md`'s install-paths table.
+9. **Retire an earlier method, only when the scan found one.** Two instructions for the same job means the older one still fires. Show the user both, then, on their yes: replace the body of the old skill's `SKILL.md` with one pointer line, "Retired YYYY-MM-DD → now the blacksmith skill.", leave the file in place, and remove or re-point its wiring line in the standing-instructions file. Test (b) in Phase 3 then proves the old trigger reaches Blacksmith.
 
-**If DP-1 is option B (linked into the skills directory):**
-
-macOS and Linux:
-```
-ls -l "<skills home>"                                  # confirm the directory first
-ln -sfn "<workspace>/blacksmith" "<skills home>/blacksmith"
-ls -lL "<skills home>/blacksmith"                       # confirm the link resolves
-```
-
-Windows (Command Prompt, run as the same user who owns both folders):
-```
-mklink /J "<skills home>\blacksmith" "<workspace>\blacksmith"
-dir "<skills home>\blacksmith"
-```
+10. Record every path written or edited so far: the install path, `blacksmith.json`'s final contents, the templates copied, the standing-instructions edit, the build-protocol edit if any: in `STATUS.md`'s install-paths table.
 
 ## Phase 3: first live run
 
@@ -226,13 +229,15 @@ Fill the card together on one small, real, weekly thing, the plan and the build'
 
 On any install where you cannot start a fresh reader yourself (no sub-agents, whatever else you have), tests (b) and (c) are the user's to run, and you never stand in for the fresh reader: you wrote the edits, so your read cannot fail. Mark both `[~]` in `STATUS.md`, say so, and tick them when the user reports back. On a chat-only install with no shell, test (a) is theirs too, from `references/check-by-hand.md`. For test (c), hand the user this to paste into a second, fresh chat:
 
-> I'm testing a skill called blacksmith. Here's its file: [paste the skill's `SKILL.md`]. Here's the fixture: [paste the filled `templates/fixture.md`]. Follow it and tell me what you'd do, using only what's here.
+> I'm testing a skill called blacksmith. Here's its file: [paste the skill's `SKILL.md`]. Here's the fixture: [paste the filled `templates/fixture.md`]. Follow it and tell me what you'd do, using only what's here. When you need a file the fixture names, ask me for it by its path and I will paste it. 
+
+Then paste each file that chat asks for, with its path as the first line, and nothing it did not ask for.
 
 ## Phase 4: wrap
 
 Walk the user through what's installed and where, reading straight from `STATUS.md`'s tables. Before offering to delete the kit, copy the scan table and the decisions table into `<blacksmith install path>/references/install-record.md`: this is the only record of which options were chosen, and it has to survive the kit's own deletion.
 
-Leave the user with one habit, not a list: after any skill finishes a run, answer its close line. That single habit is what makes the feedback loop real instead of theoretical.
+Leave the user with one habit, not a list. With a feedback loop (DP-3 A or B): after any skill finishes a run, answer its close line. With none (DP-3 C): when a skill gets something wrong, say so in that chat and run door 2 on it.
 
 ## If things go wrong
 
