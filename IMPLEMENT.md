@@ -60,7 +60,7 @@ Present these six, one at a time, in plain language. Record every answer in `STA
 - **B. In the workspace, linked into the platform's skills directory**: a symlink on macOS and Linux, a directory junction on Windows. *Trade-off:* the skill sits beside the notes it reads, and one backup covers both, but you now maintain a link.
 - **C. In the workspace, referenced from the standing-instructions file**, with no auto-discovery. *Trade-off:* works anywhere, but nothing finds the skill on its own: the instructions file has to name it every time.
 
-**Recommendation:** the platform auto-discovers skills and you keep no searched-and-backed-up workspace → A. It auto-discovers and you do have a workspace you search and back up → B (skills sit beside the notes they read; the cost is a link to maintain). No auto-discovery at all → C, at `<workspace>/_tools/skills/`. "Whatever you recommend": A if the scan found a skills directory, otherwise C.
+**Recommendation:** the platform auto-discovers skills and you keep no searched-and-backed-up workspace → A. It auto-discovers and you do have a workspace you search and back up → B (skills sit beside the notes they read; the cost is a link to maintain). No auto-discovery at all → C, in the folder where the user's skills already sit; only when they have none, at `<workspace>/_tools/skills/`. "Whatever you recommend": A if the scan found a skills directory, otherwise C.
 
 **Downstream:** `blacksmith.json`'s `skills_home` value; whether `standard.md` § 8 keeps or drops its link recipe; check 8 (discovery). Record your choice in `STATUS.md`.
 
@@ -81,7 +81,7 @@ Present these six, one at a time, in plain language. Record every answer in `STA
 - **B. A flat loop**: every skill at depth 1, one row logged each run. *Trade-off:* lighter, less insight into repeated mistakes.
 - **C. No loop**: no close line at all; a run just ends by naming what it produced. *Trade-off:* simplest, but skills never improve from their own runs.
 
-**Recommendation:** anyone who will run their skills more than a handful of times → A (skills improve from real runs, not from theory written up front). A user who says outright they won't read a log of runs → B. C only if the user asks for it by name. "Whatever you recommend": A.
+**Recommendation:** anyone who will run their skills more than a handful of times → A (skills improve from real runs, not from theory written up front). A user who says outright they won't read a log of runs → B. C only if the user asks for it by name. "Whatever you recommend": A. If the user has said neither, ask this, word for word: "After a skill runs, will you answer a one-line question about how it went?" Yes → A. No → B.
 
 **Downstream:** `blacksmith.json`'s `close_line` value; check 5 (skipped entirely under C); `standard.md` §§ 1.5 and 7; the last line of every skill's own `SKILL.md` (removed under C).
 
@@ -148,7 +148,7 @@ Prompt:   "bring my weekly-review skill up to standard"
    Set `skills_home` and `workspace_root` for DP-1:
    - **A:** `"skills_home": "<path to the auto-loaded skills directory>"`, `"workspace_root": null`
    - **B:** `"skills_home": "<path to the auto-loaded skills directory>"`, `"workspace_root": "<path to the workspace>"` (the real files live in the workspace; the link inside the skills directory is what your AI actually opens)
-   - **C:** `"skills_home": "<workspace>/_tools/skills"`, `"workspace_root": "<path to the workspace>"`
+   - **C:** `"skills_home": "<the folder the user's skills already sit in, or <workspace>/_tools/skills when there is none>"`, `"workspace_root": "<path to the workspace>"`
 
    Set `close_line` for DP-3:
    - **A and B:** leave the shipped line exactly as it is. The literal `N` stays in the file; each skill's own draft resolves it to 1, 2 or 3 when that skill is written.
@@ -165,8 +165,8 @@ Prompt:   "bring my weekly-review skill up to standard"
    - **DP-1, option A or C** (nothing is linked). In `references/standard.md` § 8, find the bullet that begins "The link recipe, in this order" and replace the whole bullet with: "No link is needed in this install: the skill folders already sit where the AI reads them (install record)."
    - **DP-3, option B** (every skill at depth 1). In `references/standard.md` § 1.5, find "N is 1 for a leaf, 3 when F1 or F5 is set, otherwise 2, and the user may change it." and replace it with "N is 1 for every skill in this install, and the user may change it." In `SKILL.md` door 1 step 4, find "N is 1 for a leaf, 3 when F1 or F5 is set, otherwise 2; the user changes it later." and replace it with "N is 1; the user changes it later." In the last line of `SKILL.md`, change `(usual: 3)` to `(usual: 1)`.
    - **DP-3, option C** (no loop). In `SKILL.md`, delete everything from the heading "## Close line" to the end of the file, and in door 2 step 8 replace "what is still open, then the close line below." with "and what is still open." In `references/standard.md` § 1.5, replace the bullet that begins "Checkable form:" with: "Checkable form: the last section names what was produced, by path. This install runs no feedback loop, so no close line is printed (install record)."
-   - **DP-4, option B** (a second tool does the cold read). In `SKILL.md` section "The check", find "a fresh agent with zero context follows SKILL.md from the fixture's paths on one real prompt, and the transcript is the evidence." and replace it with "a second tool, called read-only from the shell, follows SKILL.md from the fixture's paths on one real prompt, and its transcript is the evidence."
-   - **DP-4, option C** (the user does the cold read). Same sentence, replaced with "the user opens a new chat and pastes the fixture, that chat follows SKILL.md on one real prompt, and the transcript the user pastes back is the evidence."
+   - **DP-4, option B** (a second tool does the cold read). In `SKILL.md` section "The check", find "a fresh agent with zero context follows SKILL.md from the fixture's paths on one real prompt, and the transcript is the evidence." and replace it with "a second tool, called read-only from the shell, follows SKILL.md from the fixture's paths on one real prompt, and its transcript is the evidence." Then delete the sentence two sentences later that begins "No sub-agents:"; the new sentence already says it.
+   - **DP-4, option C** (the user does the cold read). Same sentence, replaced with "the user opens a new chat and pastes the fixture, that chat follows SKILL.md on one real prompt, and the transcript the user pastes back is the evidence." Then delete the sentence that begins "No sub-agents:", as under option B.
    - **No sub-agents at all** (the scan said so, whatever DP-4 chose). In `SKILL.md`, find "Mode: **orchestrator**. Drafts by a sub-agent at high effort with the brief on disk; cold reads by a fresh agent with zero context;" and replace it with "Mode: **one thread**. You draft from the brief on disk, then re-read your own draft as a stranger would; the cold read runs as the check section says;"
 
 5. Under DP-6 option B: copy `templates/skills-index.md` into the workspace, and add one row for `blacksmith` itself (the row already in the shipped template; replace its path with the real install path). Under DP-6 option A: ask the user before touching their index, then add the same row there in their format.
@@ -221,12 +221,12 @@ Fill the card together on one small, real, weekly thing, the plan and the build'
 
 **Verification tests.** Each one only counts if you also state the input that would make it fail:
 - (a) The check passes on the newly installed `blacksmith` skill, and fails when pointed at the kit's `example/dirty-skill`: if it passes on the dirty example too, the check isn't actually checking anything.
-- (b) In a fresh session, the user says something like "bring my [skill] up to standard" without naming `blacksmith` at all, and it fires anyway: if it doesn't fire, the wiring line from Phase 2 step 7 didn't take.
-- (c) The cold read from DP-4 runs on the skill just touched, using the fixture, and a reader with no memory of this session can actually follow it: if the reader gets stuck or guesses, that step of the skill needs a rewrite, not a stronger prompt.
+- (b) In a fresh session, the user says something like "bring my [skill] up to standard" without naming `blacksmith` at all, and it fires anyway: if it doesn't fire, the wiring line from Phase 2 step 7 didn't take. You cannot open a fresh session for the user on any tier: hand them the sentence to say, mark this test `[~]` (deferred) in `STATUS.md`, and tick it when they report back that it fired.
+- (c) The cold read from DP-4 runs on the skill just touched, using the fixture, and a reader with no memory of this session can actually follow it: if the reader gets stuck or guesses, that step of the skill needs a rewrite, not a stronger prompt. Door 2 does not write a fixture on its own, so write one first: copy `templates/fixture.md` from the installed `blacksmith` folder to the build's paper folder (default: `builds/[skill name]/tests/` in the workspace), fill every field with paths and one real prompt, and run the check with `--fixture` to confirm it passes check 10.
 
-On a chat-only install (no shell, no sub-agent), tests (a) and (c) can't run automatically. Say so, and hand the user this to paste into a second, fresh chat:
+On any install where you cannot start a fresh reader yourself (no sub-agents, whatever else you have), tests (b) and (c) are the user's to run, and you never stand in for the fresh reader: you wrote the edits, so your read cannot fail. Mark both `[~]` in `STATUS.md`, say so, and tick them when the user reports back. On a chat-only install with no shell, test (a) is theirs too, from `references/check-by-hand.md`. For test (c), hand the user this to paste into a second, fresh chat:
 
-> I'm testing a skill called blacksmith. Here's its file: [paste `skill/SKILL.md`]. Here's the fixture: [paste the filled `templates/fixture.md`]. Follow it and tell me what you'd do, using only what's here.
+> I'm testing a skill called blacksmith. Here's its file: [paste the skill's `SKILL.md`]. Here's the fixture: [paste the filled `templates/fixture.md`]. Follow it and tell me what you'd do, using only what's here.
 
 ## Phase 4: wrap
 
