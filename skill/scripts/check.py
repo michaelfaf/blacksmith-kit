@@ -7,12 +7,13 @@
   python3 check.py --selftest
 
 A bare name resolves through the configured skills home (blacksmith.json, next to this script);
-a path is used as-is. Ten checks, one line each: PASS / FAIL / WARN / SKIP: then the verdict:
-`PASS <name>` (exit 0) or `FAIL <name>: <n> failures` (exit 1). WARN never moves the verdict.
+a path (anything with a slash, or starting with . or ~) is used as-is. Ten checks, one line each
+(check 10 only with --fixture): PASS / FAIL / WARN / SKIP / INFO, then the verdict:
+`PASS <name>` (exit 0) or `FAIL <name>: <n> failures` (exit 1). WARN and INFO never move the verdict.
 This is the automatic half of the standard's check; the other half is a cold read of the skill
 by a fresh agent or a second person, from the fixture's paths.
 """
-import argparse, json, os, re, shlex, shutil, sys, tempfile
+import argparse, json, os, re, shlex, shutil, sys, tempfile, time
 from datetime import datetime
 from pathlib import Path
 
@@ -51,9 +52,9 @@ def resolve_config_path(p, cfg):
     pp = Path(p).expanduser(); return pp if pp.is_absolute() else (cfg.get("workspace_root") or cfg.get("skills_home") or Path.cwd()) / pp
 
 def resolve_target(arg, skills_home):
-    # (root, bare_name_or_None). ponytail: a bare word that is also a folder here resolves as that folder: say the path explicitly if that ever bites.
+    # (root, bare_name_or_None). A bare name always means the skill of that name in the skills home; a local folder is written ./name.
     p = Path(arg).expanduser()
-    if "/" in arg or os.sep in arg or arg.startswith(("~", ".")) or p.is_dir():
+    if "/" in arg or os.sep in arg or arg.startswith(("~", ".")):
         return p.resolve(), None
     return (skills_home / arg), arg
 
@@ -80,12 +81,14 @@ def fm_scalar(fm, key):
             return (" " if val[0] == ">" else "\n").join(block).strip(), "block (" + val[0] + ")"
         if len(val) >= 2 and val[0] == val[-1] and val[0] in "\"'":
             val = val[1:-1]
+        else:
+            val = re.sub(r"\s+#.*$", "", val)      # a YAML comment after a plain value
         return val, "plain"
     return None, None
 
 def build_path_prefix(workspace_root):
     # a token is checked when absolute, `~/`, or under one of the skill's own folders: or, with workspace_root set, under one of its top-level folders (contract § 6, check 4).
-    base = r"^(/[^/]+/|~/|references/|scripts/|templates/|assets/|history/"
+    base = r"^(/[^/]+/|~/|\./|references/|scripts/|templates/|assets/|history/"
     if workspace_root and workspace_root.is_dir():
         tops = sorted({d.name for d in workspace_root.iterdir() if d.is_dir()}, key=len, reverse=True)
         if tops:
@@ -239,6 +242,8 @@ def run_checks(target, cfg, fixture=None):
     empty_at = None
     if "lessons.md" in present:
         ll = (refs / "lessons.md").read_text(errors="replace").splitlines()
+        if not any(l.strip() for l in ll):
+            empty_at = 1
         for i, ln in enumerate(ll):
             if re.match(r"^##\s+Lessons\b", ln, re.I):
                 body = []
@@ -274,7 +279,7 @@ def run_checks(target, cfg, fixture=None):
             rep.add(9, "registry", "SKIP", f"registry file not found at {reg_path}")
         else:
             word = re.compile(rf"(?<![A-Za-z0-9-]){re.escape(bare)}(?![A-Za-z0-9-])")
-            hit = word.search(reg_path.read_text(errors="replace"))
+            hit = any(word.search(l) for l in reg_path.read_text(errors="replace").splitlines() if re.match(r"\s*(\||[-*] |\d+\. )", l))   # a table row or a list item
             rep.add(9, "registry", "PASS" if hit else "FAIL", f"{bare} {'listed in' if hit else 'not listed in'} {reg_path}")
     # 10 · fixture
     if fixture:
@@ -282,15 +287,18 @@ def run_checks(target, cfg, fixture=None):
         if not fp.is_file():
             rep.add(10, "fixture", "FAIL", f"not found: {fp}")
         else:
-            body = fp.read_text(errors="replace")
-            probs = []
+            body = re.sub(r"<!--.*?-->", "", fp.read_text(errors="replace"), flags=re.S)
+            probs, quoted = [], 0
             if "SKILL.md" not in body:
                 probs.append("does not name the SKILL.md path")
-            if not re.search(r"prompt", body, re.I):
-                probs.append("no prompt named")
+            if not re.search(r"(?im)^[ \t]*(>[ \t]*\S|.*prompt[^:\n]*:[ \t]*\S)", body):
+                probs.append("no prompt given")
+            if re.search(r"<[^<>\n]+>", body):
+                probs.append("a template field is still unfilled")
             run, start = 0, None
             for i, ln in enumerate(body.splitlines(), 1):
-                s = ln.strip()   # a path, heading, blank, quote or "prompt" resets the run; >3 lines of anything else looks like pasted reference text.
+                s = ln.strip()   # a path, heading, blank or "prompt" line resets the run; >3 lines of anything else, or of quoted text, looks like pasted reference text.
+                quoted += s.startswith(">") and len(s) > 1
                 if not s or s.startswith(("#", ">")) or "/" in s or s.endswith(EXTS) or re.search(r"prompt", s, re.I):
                     run = 0
                     continue
@@ -299,6 +307,8 @@ def run_checks(target, cfg, fixture=None):
                 if run > 3:
                     probs.append(f"pasted text longer than 3 lines from line {start}: paths only")
                     break
+            if quoted > 3:
+                probs.append(f"{quoted} quoted lines: a prompt is short, a reference is a path")
             rep.add(10, "fixture", "FAIL" if probs else "PASS", "; ".join(probs) if probs else f"names SKILL.md, a prompt, and paths only ({fp.name})", str(fp) if probs else None)
     return rep, name
 
@@ -315,30 +325,39 @@ def emit(rep, name, as_json):
 def snapshots_home(home=None):
     return (home or blacksmith_folder()) / "history" / "snapshots"
 
+SOURCE_NOTE = ".blacksmith-source"          # inside each snapshot: the folder it was taken from
+LEFT_OUT = ("history", ".git", "__pycache__")   # top level of the skill only: state and tooling, not direction
+
 def do_snapshot(arg, cfg, home=None):
     # the guard: copy the skill folder to history/snapshots/<name>-<stamp>/ and print the restore command.
-    # ponytail: a skill's own history/ folder is state, not direction; it is left out of the snapshot and left alone by a restore.
+    # ponytail: the skill's own top-level history/ is state, not direction; it stays out of the snapshot and a restore leaves it alone.
     root, bare = resolve_target(arg, cfg["skills_home"]); name = bare or root.name
     if not root.is_dir():
         print(f"no folder at {root}"); return 1
-    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    dest = snapshots_home(home) / f"{name}-{stamp}"
+    while True:
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S"); dest = snapshots_home(home) / f"{name}-{stamp}"
+        if not dest.exists():
+            break
+        time.sleep(1)                       # two snapshots of one skill in the same second
     dest.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(root, dest, ignore=shutil.ignore_patterns("history", "__pycache__", ".git"))
-    print(f"snapshot: {dest}"); print(f'restore command: python3 "{Path(__file__).absolute()}" --restore {name} {stamp}')
+    top = str(root)
+    shutil.copytree(root, dest, symlinks=True, ignore=lambda d, names: [n for n in names if d == top and n in LEFT_OUT])
+    (dest / SOURCE_NOTE).write_text(str(root.absolute()) + "\n")
+    print(f"snapshot: {dest}"); print(f'restore command: python3 "{Path(__file__).absolute()}" --restore {shlex.quote(name)} {stamp}')
     return 0
 
 def do_restore(name, stamp, cfg, home=None):
     src = snapshots_home(home) / f"{name}-{stamp}"
     if not src.is_dir():
         print(f"no snapshot at {src}: refusing to restore"); return 1
-    root, _ = resolve_target(name, cfg["skills_home"])
+    note = src / SOURCE_NOTE                 # restore to where the snapshot was taken, not to whatever the name means today
+    root = Path(note.read_text().strip()) if note.is_file() else resolve_target(name, cfg["skills_home"])[0]
     root.mkdir(parents=True, exist_ok=True)
-    for child in root.iterdir():            # everything the snapshot covers goes; history/ and .git stay
-        if child.name in ("history", ".git"):
+    for child in root.iterdir():            # everything the snapshot covers goes; what it left out stays
+        if child.name in LEFT_OUT:
             continue
         shutil.rmtree(child) if child.is_dir() and not child.is_symlink() else child.unlink()
-    shutil.copytree(src, root, dirs_exist_ok=True)
+    shutil.copytree(src, root, symlinks=True, dirs_exist_ok=True, ignore=shutil.ignore_patterns(SOURCE_NOTE))
     print(f"restored {root} from {src}"); return 0
 
 def selftest():
@@ -437,6 +456,21 @@ def selftest():
     ok((guarded / "SKILL.md").read_text() == "original content\n", "restore did not return the original content")
     ok((guarded / "history" / "ledger.md").read_text() == "kept\n" and not (snaps[0] / "history").exists(), "history/ must stay out of the snapshot and survive the restore")
     ok(do_restore("guarded", "19990101-000000", cfg, home=tmp) == 1, "restore of a missing snapshot should refuse")
+    away = tmp / "elsewhere" / "guarded"; (away / "references" / "history").mkdir(parents=True)
+    (away / "SKILL.md").write_text("the copy\n"); (away / "references" / "history" / "evidence.md").write_text("evidence\n")
+    ok(do_snapshot(str(away), cfg, home=tmp) == 0, "snapshot of a path did not return 0")
+    stamp2 = sorted(snapshots_home(tmp).glob("guarded-*"))[-1].name.split("guarded-", 1)[1]
+    (away / "SKILL.md").write_text("edited\n")
+    ok(do_restore("guarded", stamp2, cfg, home=tmp) == 0 and (away / "SKILL.md").read_text() == "the copy\n", "a path snapshot must restore to its own folder")
+    ok((guarded / "SKILL.md").read_text() == "original content\n", "restoring a path snapshot must not touch the skill of the same name")
+    ok((away / "references" / "history" / "evidence.md").read_text() == "evidence\n" and not (away / SOURCE_NOTE).exists(), "a nested history folder is part of the snapshot and survives")
+    blank = tmp / "fixture-blank.md"; blank.write_text("SKILL.md path: <path to the skill's SKILL.md>\n\nOne real test prompt:\n\n>\n")
+    rep, _ = run_checks(str(clean), cfg, fixture=str(blank))
+    ok(status(rep, 10) == ["FAIL"] and "unfilled" in detail(rep, 10) and "no prompt" in detail(rep, 10), detail(rep, 10))
+    (clean / "references" / "lessons.md").write_text("")
+    rep, _ = run_checks(str(clean), cfg)
+    ok(status(rep, 7) == ["FAIL"] and "none yet" in detail(rep, 7), detail(rep, 7))
+    (clean / "references" / "lessons.md").unlink()
     shutil.rmtree(tmp)
     print(f"SELFTEST PASS ({checks} assertions: dirty skill 5 FAILs with the folded description parsed · clean skill PASS, listed in the registry · fixture PASS/FAIL · pre-created log FAIL with a fixture, INFO without · no-trigger description + close line not last FAIL · close_line null SKIP · claude-in-name + angle-bracket/long description FAIL · no frontmatter FAIL + nested-skill close line SKIP · discovery SKIP on a path target · registry SKIP when null · workspace-rooted path resolves/fails · snapshot then restore returns a changed file to its snapshot content, and refuses a restore of a missing snapshot)")
     return 0

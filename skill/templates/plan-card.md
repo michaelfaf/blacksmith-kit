@@ -16,6 +16,18 @@ Fill this in before door 1 (building a new skill) when nothing else hands the sk
 -
 -
 
+## Plan
+<!-- The steps the skill will take, in order, one line each: what it reads, what it does, what it produces. This is the plan the draft follows; nothing is re-asked after you approve it. -->
+
+1.
+2.
+3.
+
+## Where the build's paper goes
+<!-- One folder for this build's brief and its test fixture, outside the skill folder. Default: a folder named builds/[skill name]/ in your workspace, with prompts/ and tests/ inside. -->
+
+
+
 ## Reads and writes
 <!-- Every file or path this skill reads from and writes to. Be exact; a vague path here becomes a broken one later. -->
 
@@ -45,7 +57,7 @@ Fill this in before door 1 (building a new skill) when nothing else hands the sk
 |---|---|
 | F1: does it hand work to sub-agents? |  |
 | F2: does it keep state outside its own folder? |  |
-| F3: does it take an action that cannot be undone or costs money? |  |
+| F3: does it take an irreversible or costly action: money, a send, a write to a system of record, a publish? |  |
 | F4: is the user in the loop turn by turn for the whole run? |  |
 | F5: does it ship something to someone outside? |  |
 | F6: does it run unattended or on a schedule? |  |

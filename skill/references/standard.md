@@ -30,7 +30,7 @@ Present wherever a skill reads well cold, absent wherever it fights the agent; e
 - Missing → the agent re-derives state from the chat and loses it the moment the chat is compacted (census).
 
 **1.5 One ending that says what was produced and hands off** (census).
-- Checkable form: the last section names what was produced, by path, and the final line is the close line, exact: `Done. Feedback loop: 1, 2, 3, or later? (usual: N)`. N is 1 for a leaf, 3 when F1 or F5 is set, otherwise 2, and the user may change it. The line above the close line points at this standard's § 7, so the AI in the chat knows what the user's bare "1", "2", "3" or "later" means.
+- Checkable form: the last section names what was produced, by path, and the final line is the close line, exact: `Done. Feedback loop: 1, 2, 3, or later? (usual: N)`. N is 1 for a leaf, 3 when F1 or F5 is set, otherwise 2, and the user may change it. The exact line for this install is the `close_line` value in Blacksmith's `scripts/blacksmith.json`; when that value is null, the install runs no loop and no close line is printed. The line above the close line points at this standard's § 7, so the AI in the chat knows what the user's bare "1", "2", "3" or "later" means.
 - Missing → the skill grows its own ending, and it starts to contradict the feedback loop; in the census, only 4 of 33 skills printed the close line exactly (census).
 
 ## 2. The six flags, and the block each "yes" adds
@@ -110,7 +110,7 @@ The five things above are the whole frame; everything else varies by capability,
 | The state slot | Anything the skill must remember between runs | A **history/** folder inside the skill, or files in the project the skill serves; either way named by full path in SKILL.md: the build's own history lives in the build's own folder in the workspace, never inside the skill. | (census) |
 | **references/runs.md** + **references/lessons.md** | The feedback loop's, not the builder's | The loop creates them on its first run, the only files it may create in a skill it did not build; an empty lessons file carries a "none yet" line so "none yet" can be told from "not maintained". | (standard § 7) |
 
-What never lives in a skill folder: test prompts (the build's own tests folder) · design docs · generated data · backups · a README: SKILL.md is the README-equivalent (census).
+What never lives in a skill folder: test prompts (the build's own tests folder) · design docs · generated data · backups (Blacksmith's snapshots are its state and sit in its own state slot) · a README: SKILL.md is the README-equivalent (census).
 
 ## 6. Where things live
 - Direction → `SKILL.md`: what to do (census).
@@ -134,7 +134,7 @@ This section is the one home of the loop's definition; nothing else restates it 
 - Depth 1 = one row appended to **references/runs.md** (date, depth, summary, corrections, signal). Depth 2 = the row, plus a re-read of the skill for the one rule the run bent and a one-line patch proposed to the user. Depth 3 = the row, the re-read, and a fresh-eyes read of what the run produced, a day later. "later" = nothing now; the next run asks again. The AI in the chat runs it; a build protocol with its own loop runs the same three depths (census).
 
 ## 8. Registration
-- The link recipe, in this order (only when skills are kept in the workspace and linked into the folder the platform auto-loads): check what is already there (list the target name; expect "no such file", or a link you mean to replace) → make the link (`ln -sfn "<target folder>" "<link>"`) → verify by following the link (a plain listing that resolves the link, not just shows it). Windows form beside it: `mklink /J "<link>" "<target>"`, then `dir "<link>"` to confirm the junction resolves (cost: a plain link made directly over an existing one nested inside it instead of replacing it, and the skill silently stopped loading).
+- The link recipe, in this order (only when skills are kept in the workspace and linked into the folder the platform auto-loads): check what is already there (list the target name; expect "no such file", or a link you mean to replace) → make the link (`ln -sfn "<target folder>" "<link>"`) → verify by following the link (a plain listing that resolves the link, not just shows it). Windows form beside it: `mklink /J "<link>" "<target>"`, then `dir "<link>"` to confirm the junction resolves; when a junction is already there, remove it first with `rmdir "<link>"`, which removes the junction and leaves the target alone (cost: a plain link made directly over an existing one nested inside it instead of replacing it, and the skill silently stopped loading).
 - One registry row per skill, in the file the user's setup names as the registry (a skills index, a README table, or none if the folder listing is the list); a new or renamed skill is seen only by a fresh session, never mid-chat (census).
 - Retire what a skill replaces with a pointer line ("Retired `<date>` → now the `<name>` skill."), and leave the old file in place; never delete it, or the old copy gets found and followed by mistake (cost: a replaced file's old body stayed live after the replacement, and it got found and followed by mistake).
 - Description parity, checked at registration: every trigger phrase the user gave is in the description, in their words (census).

@@ -217,7 +217,7 @@ Order this so the user sees a real result before anything optional. Ask which of
 7. Show the restore command again, so the user knows undoing this is one line.
 
 **Door 1, on the plan card:**
-Fill the card together on one small, real, weekly thing. Draft the folder from it. Home it per DP-1. Run the check.
+Fill the card together on one small, real, weekly thing, the plan and the build's paper folder included. Draft the folder from it. Home it per DP-1. Run the check. Then run the cold read per DP-4 and close, as door 1 step 8 says for a plan card.
 
 **Verification tests.** Each one only counts if you also state the input that would make it fail:
 - (a) The check passes on the newly installed `blacksmith` skill, and fails when pointed at the kit's `example/dirty-skill`: if it passes on the dirty example too, the check isn't actually checking anything.

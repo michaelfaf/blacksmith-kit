@@ -6,9 +6,9 @@ Run these with a text search and your eyes when there is no shell, or when you w
 
 **2. description.** Look at: the `description:` line. PASS: present, 1,024 characters or fewer, no angle brackets, and it says when the skill fires. FAIL: over the limit, has `<` or `>`, or never says "use when" or similar.
 
-**3. size.** Look at: `wc -l SKILL.md`. PASS: 500 lines or fewer (warn if over 150). FAIL: over 500.
+**3. size.** Look at: the number of lines in SKILL.md (a last line with no line break still counts). PASS: 500 lines or fewer (warn if over 150). FAIL: over 500.
 
-**4. paths.** Look at: every path-shaped token in the skill's `.md` files. PASS: each one resolves, checked from the skill folder, as an absolute path, or, when it starts with a top-level folder of the workspace, from the workspace root. FAIL: any path that does not exist at that location.
+**4. paths.** Look at: every path written in backticks or as a link target in the skill's `.md` files that is absolute or starts with `./`, `~/`, references/, scripts/, templates/, assets/, history/ or the name of a top-level folder of the workspace. Paths in plain text are not checked. PASS: each one resolves from the file that names it, from the skill folder, or from the workspace root. FAIL: a path that resolves from none of them.
 
 **5. close line.** Look at: the last non-blank line of SKILL.md. PASS: the exact close line the setup uses, with its number filled in. FAIL: missing, reworded, or not the last line. Skip if the skill is called only from another skill.
 
@@ -20,8 +20,8 @@ Run these with a text search and your eyes when there is no shell, or when you w
 
 **9. registry.** Look at: the registry file the setup names. PASS: the skill's name appears as a row. FAIL: no row. Skip if there is no registry, or on a path target.
 
-**10. fixture.** Look at: the fixture file, when one was given. PASS: it names the SKILL.md path and one prompt, and every other line is a path, no pasted text longer than 3 lines. FAIL: pasted content instead of a path, or no prompt.
+**10. fixture.** Look at: the fixture file, when one was given. PASS: every field is filled in, it names the SKILL.md path and one prompt, and everything else is a path: no pasted text longer than 3 lines, quoted or not. FAIL: a field left as the template had it, pasted content instead of a path, or no prompt.
 
 ## The snapshot, by hand
 
-Before any door 2 edit: copy the whole skill folder to `history/snapshots/<name>-<date>/` inside the blacksmith skill folder. Keep the copy until the re-check after the edit passes. To restore, copy that snapshot back over the live folder.
+Before any door 2 edit: copy the skill folder to `history/snapshots/[name]-[date]/` inside the blacksmith skill folder, leaving out the skill's own top-level history folder. Keep the copy until the re-check after the edit passes. To restore: delete everything in the live folder except its history folder, then copy the snapshot back in. Copying over the top without deleting first would leave behind any file the bad edit created.
