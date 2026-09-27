@@ -488,6 +488,7 @@ def main():
         with contextlib.redirect_stdout(buf):
             rc = selftest()
         print(buf.getvalue().strip().splitlines()[-1]); sys.exit(rc)
+    cfg = load_config()
     if a.snapshot: sys.exit(do_snapshot(a.snapshot, cfg))
     if a.restore: sys.exit(do_restore(a.restore[0], a.restore[1], cfg))
     if not a.target: p.error("give a skill name or path, or --selftest, --snapshot, --restore")

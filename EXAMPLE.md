@@ -26,7 +26,16 @@ Done. Feedback loop: 1, 2 or later? (usual: 2)
 
 ```
 $ python3 skill/scripts/check.py example/dirty-skill
-
+PASS  1 name: name 'dirty-skill' is bare kebab-case (path target: name not compared)  [SKILL.md:2]
+FAIL  2 description: no trigger phrases: say when it fires ("Use when …") (plain)
+PASS  3 size: SKILL.md is 13 lines
+FAIL  4 paths: 1 missing of 1 checked: SKILL.md:7 `references/pantry.md`  [SKILL.md:7]
+FAIL  5 close line: near-miss: expected `Done. Feedback loop: 1, 2, 3, or later? (usual: N)`, found `Done. Feedback loop: 1, 2 or later? (usual: 2)`  [SKILL.md:13]
+PASS  6 placeholders: no [NEEDS CLARIFICATION in the folder
+PASS  7 feedback-loop files: runs.md / lessons.md not pre-created
+SKIP  8 discovery: path target: no discovery check
+SKIP  9 registry: path target: a copy is not registered by design
+FAIL dirty-skill: 3 failures
 ```
 
 ## What Blacksmith would report
@@ -103,7 +112,16 @@ were added (no flag is set, so this is a leaf and its usual depth is 1); and the
 
 ```
 $ python3 skill/scripts/check.py example/clean-skill
-
+PASS  1 name: name 'clean-skill' is bare kebab-case (path target: name not compared)  [SKILL.md:2]
+PASS  2 description: 131 chars (plain)
+PASS  3 size: SKILL.md is 22 lines
+PASS  4 paths: 1 path-shaped tokens resolve; paths in plain text are not checked (no workspace root set: only skill-relative and absolute paths checked)
+PASS  5 close line: exact, last line  [SKILL.md:22]
+PASS  6 placeholders: no [NEEDS CLARIFICATION in the folder
+PASS  7 feedback-loop files: runs.md / lessons.md not pre-created
+SKIP  8 discovery: path target: no discovery check
+SKIP  9 registry: path target: a copy is not registered by design
+PASS clean-skill
 ```
 
 Checks 8 and 9 stay SKIP here because this run passed a folder path, not a bare name: door 2 on
